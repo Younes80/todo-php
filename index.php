@@ -1,13 +1,7 @@
-<pre>
 <?php
-
-// Constantes à mettre au plus haut du fichier
-const ERROR_REQUIRED = "Veuillez renseigner une tâche";
-const ERROR_TOO_SHORT = "Veuiller entrer au moins 5 caratères";
-
+require_once 'errors.php';
 // Variable qui stocke le chemin du fichier JSON
 $filename = "./data/data.json";
-
 // Initialisation des erreurs avec une chaine de caratère vide
 $errors = [
     'task' => '',
@@ -19,43 +13,11 @@ if (file_exists($filename)) {
     $data = file_get_contents($filename);
     $todos = json_decode($data, true) ?? [];
 }
-
-
 // Condition pour vérifier la méthode POST
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Filtre pour sécuriser les input du formulaire
-    $_POST = filter_input_array(INPUT_POST, [
-        'task' => [
-            'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS,
-            'flags' => FILTER_FLAG_NO_ENCODE_QUOTES | FILTER_FLAG_STRIP_BACKTICK
-        ]
-    ]);
-    // Récupération de la valeur et stocker dans une variable
-    $task = $_POST['task'] ?? '';
-
-    // Condition pour la gestion des erreurs
-    if (!$task) {
-        $errors['task'] = ERROR_REQUIRED;
-    } elseif (mb_strlen($task) < 5) {
-        $errors['task'] = ERROR_TOO_SHORT;
-    }
-
-    if (empty(array_filter($errors, fn ($e) => $e !== ''))) {
-        $todos = [...$todos, [
-            'task' => $task,
-            'done' => false,
-            'id' => time(),
-        ]];
-        file_put_contents($filename, json_encode($todos));
-        $task = '';
-    }
+    require_once './add-task.php';
 }
-
-// print_r($todos);
-
 ?>
-</pre>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -74,7 +36,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <body>
     <div class="container">
-
         <?php include './includes/header.php' ?>
         <div class="content">
             <div class="todo-container">
@@ -91,12 +52,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <?php foreach ($todos as $task) : ?>
                         <li class="task-item <?= $task['done'] ? 'low-opacity' : '' ?>">
                             <span class="task-name"> <?= $task['task'] ?></span>
-                            <a href="/edit-task.php?id=<?= $task['id'] ?>">
-                                <button class="btn btn-primary btn-small"><?= $task['done'] ? 'Annuler' : 'Valider' ?></button>
-                            </a>
-                            <a href="/remove-task.php?id=<?= $task['id'] ?>">
-                                <button class="btn btn-danger btn-small">Supprimer</button>
-                            </a>
+                            <form action="/modify-task.php" method="POST" class="m-0">
+                                <input type="hidden" name="id" value="<?= $task['id'] ?>">
+                                <input type="hidden" name="action" value="edit">
+                                <button type="submit" class="btn btn-primary btn-small"><?= $task['done'] ? 'Annuler' : 'Valider' ?></button>
+                            </form>
+                            <form action="/modify-task.php" method="POST" class="m-0">
+                                <input type="hidden" name="id" value="<?= $task['id'] ?>">
+                                <input type="hidden" name="action" value="remove">
+                                <button type="submit" class="btn btn-danger btn-small">Supprimer</button>
+                            </form>
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -104,7 +69,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </div>
         <?php include './includes/footer.php' ?>
     </div>
-
 </body>
 
 </html>
