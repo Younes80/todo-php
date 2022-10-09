@@ -22,7 +22,7 @@ if (!$task) {
 }
 
 // print_r($errors);
-// $var = array_filter($errors, fn ($e) => $e !== '');
+print_r(array_filter($errors, fn ($e) => $e !== ''));
 // print_r($var);
 
 if (empty(array_filter($errors, fn ($e) => $e !== ''))) {
@@ -33,5 +33,5 @@ if (empty(array_filter($errors, fn ($e) => $e !== ''))) {
     ]];
     file_put_contents($filename, json_encode($todos));
     $task = '';
-    header('Location: /');
+    // header('Location: /');
 }
